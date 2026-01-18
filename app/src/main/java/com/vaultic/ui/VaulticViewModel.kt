@@ -310,6 +310,17 @@ class VaulticViewModel(application: Application) : AndroidViewModel(application)
             updateState { it.copy(ethAddress = "", btcAddress = "", ethBalance = null, btcBalance = null) }
             return
         }
+        updateState {
+            it.copy(
+                ethAddress = "",
+                btcAddress = "",
+                ethBalance = null,
+                btcBalance = null,
+                tokenBalances = emptyMap(),
+                isLoading = true,
+                error = null
+            )
+        }
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
                 val mnemonic = requireMnemonic(walletId)

@@ -74,7 +74,9 @@ fun CoinCard(
             Text("Address", style = MaterialTheme.typography.labelMedium)
             Text(
                 text = address.ifEmpty { "--" },
-                modifier = Modifier.clickable { onCopyAddress() }
+                modifier = Modifier.clickable { onCopyAddress() },
+                minLines = 2,
+                maxLines = 2
             )
             Text("Balance: $balance")
         }
