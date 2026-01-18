@@ -1,6 +1,6 @@
 package com.vaultic.btc
 
-import org.bitcoinj.core.LegacyAddress
+import org.bitcoinj.core.SegwitAddress
 import org.bitcoinj.crypto.ChildNumber
 import org.bitcoinj.crypto.DeterministicKey
 import org.bitcoinj.wallet.DeterministicKeyChain
@@ -34,7 +34,7 @@ class BtcWalletService {
         val seed = DeterministicSeed(words, null, "", 0L)
         val chain = DeterministicKeyChain.builder().seed(seed).build()
         val path = listOf(
-            ChildNumber(44, true),
+            ChildNumber(84, true),
             ChildNumber(0, true),
             ChildNumber(0, true),
             ChildNumber(0, false),
@@ -45,6 +45,6 @@ class BtcWalletService {
 
     fun deriveAddress(mnemonic: String): String {
         val key = deriveKey(mnemonic)
-        return LegacyAddress.fromKey(params, key).toString()
+        return SegwitAddress.fromKey(params, key).toString()
     }
 }

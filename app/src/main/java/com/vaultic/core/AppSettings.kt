@@ -5,8 +5,10 @@ import android.content.Context
 class AppSettings(context: Context) {
     private val prefs = context.getSharedPreferences("vaultic.settings", Context.MODE_PRIVATE)
 
+    private val defaultRpcUrl = "https://ethereum.publicnode.com"
+
     var rpcUrl: String
-        get() = prefs.getString("rpcUrl", "") ?: ""
+        get() = prefs.getString("rpcUrl", defaultRpcUrl)?.ifBlank { defaultRpcUrl } ?: defaultRpcUrl
         set(value) { prefs.edit().putString("rpcUrl", value).apply() }
 
     var chainId: Int

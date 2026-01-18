@@ -138,29 +138,60 @@ class VaulticViewModel(application: Application) : AndroidViewModel(application)
     fun refreshBalances() {
         val walletId = walletManager.activeWalletId ?: return
         viewModelScope.launch(Dispatchers.IO) {
-            runCatching {
+            val result = runCatching {
                 val mnemonic = requireMnemonic(walletId)
                 val ethAddress = ethWalletService.deriveAddress(mnemonic)
                 val btcAddress = btcWalletService.deriveAddress(mnemonic)
-                val ethBalance = ethService.getBalance(settings.rpcUrl, ethAddress)
-                val btcBalance = btcService.getBalance(settings.btcApiBaseUrl, btcAddress)
-                val tokens = tokenStore.tokens(settings.chainId)
-                val tokenBalances = tokens.associate { token ->
-                    token.symbol to tokenService.balanceOf(settings.rpcUrl, token, ethAddress)
-                }
+                Triple(ethAddress, btcAddress, mnemonic)
+            }
+            if (result.isFailure) {
                 updateState {
                     it.copy(
-                        ethAddress = ethAddress,
-                        btcAddress = btcAddress,
-                        ethBalance = ethBalance,
-                        btcBalance = btcBalance,
-                        tokenBalances = tokenBalances,
                         isLoading = false,
-                        error = null
+                        error = result.exceptionOrNull()?.message ?: "Failed to refresh balances"
                     )
                 }
-            }.onFailure { error ->
-                updateState { it.copy(isLoading = false, error = error.message ?: "Failed to refresh balances") }
+                return@launch
+            }
+
+            val (ethAddress, btcAddress, _) = result.getOrThrow()
+            val errors = mutableListOf<String>()
+
+            val ethBalance = runCatching {
+                if (settings.rpcUrl.isBlank()) {
+                    throw IllegalStateException("Missing ETH RPC URL")
+                }
+                ethService.getBalance(settings.rpcUrl, ethAddress)
+            }.onFailure { errors += it.message ?: "Failed to fetch ETH balance" }
+                .getOrNull()
+
+            val btcBalance = runCatching {
+                btcService.getBalance(settings.btcApiBaseUrl, btcAddress)
+            }.onFailure { errors += it.message ?: "Failed to fetch BTC balance" }
+                .getOrNull()
+
+            val tokenBalances = if (ethBalance != null) {
+                val tokens = tokenStore.tokens(settings.chainId)
+                runCatching {
+                    tokens.associate { token ->
+                        token.symbol to tokenService.balanceOf(settings.rpcUrl, token, ethAddress)
+                    }
+                }.onFailure { errors += it.message ?: "Failed to fetch token balances" }
+                    .getOrElse { emptyMap() }
+            } else {
+                emptyMap()
+            }
+
+            updateState { current ->
+                current.copy(
+                    ethAddress = ethAddress,
+                    btcAddress = btcAddress,
+                    ethBalance = ethBalance ?: current.ethBalance,
+                    btcBalance = btcBalance ?: current.btcBalance,
+                    tokenBalances = if (tokenBalances.isNotEmpty()) tokenBalances else current.tokenBalances,
+                    isLoading = false,
+                    error = errors.firstOrNull()
+                )
             }
         }
         updateState { it.copy(isLoading = true, error = null) }

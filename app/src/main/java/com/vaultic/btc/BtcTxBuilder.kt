@@ -1,7 +1,7 @@
 package com.vaultic.btc
 
 import org.bitcoinj.core.ECKey
-import org.bitcoinj.core.LegacyAddress
+import org.bitcoinj.core.Address
 import org.bitcoinj.core.NetworkParameters
 import org.bitcoinj.core.Sha256Hash
 import org.bitcoinj.core.Transaction
@@ -32,15 +32,15 @@ class BtcTxBuilder(private val params: NetworkParameters) {
         if (change < 0) throw IllegalArgumentException("Insufficient funds")
 
         val tx = Transaction(params)
-        val to = LegacyAddress.fromBase58(params, toAddress)
+        val to = Address.fromString(params, toAddress)
         tx.addOutput(org.bitcoinj.core.Coin.valueOf(amountSats), to)
         if (change > 0) {
-            val changeAddr = LegacyAddress.fromBase58(params, fromAddress)
+            val changeAddr = Address.fromString(params, fromAddress)
             tx.addOutput(org.bitcoinj.core.Coin.valueOf(change), changeAddr)
         }
 
         val key = ECKey.fromPrivate(privateKeyBytes)
-        val scriptPubKey = ScriptBuilder.createOutputScript(LegacyAddress.fromBase58(params, fromAddress))
+        val scriptPubKey = ScriptBuilder.createOutputScript(Address.fromString(params, fromAddress))
 
         selected.forEach { utxo ->
             val outPoint = TransactionOutPoint(params, utxo.vout.toLong(), Sha256Hash.wrap(utxo.txid))

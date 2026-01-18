@@ -24,6 +24,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.vaultic.ui.screens.ActivityScreen
+import com.vaultic.ui.screens.HomeScreen
+import com.vaultic.ui.screens.OnboardingScreen
+import com.vaultic.ui.screens.SendScreen
+import com.vaultic.ui.screens.SettingsScreen
 
 private sealed class Tab(val route: String, val label: String) {
     data object Home : Tab("home", "Home")

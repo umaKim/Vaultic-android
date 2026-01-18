@@ -1,4 +1,4 @@
-package com.vaultic.ui
+package com.vaultic.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -6,9 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -57,23 +55,13 @@ fun WalletSelectorRow(
 }
 
 @Composable
-fun AddressBlock(label: String, address: String, onCopy: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp))
-            .padding(12.dp)
-    ) {
-        Text(label, style = MaterialTheme.typography.titleMedium)
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(address.ifEmpty { "--" })
-        Spacer(modifier = Modifier.height(8.dp))
-        OutlinedButton(onClick = onCopy) { Text("Copy") }
-    }
-}
-
-@Composable
-fun CoinCard(title: String, address: String, balance: String, onRefresh: () -> Unit) {
+fun CoinCard(
+    title: String,
+    address: String,
+    balance: String,
+    onRefresh: () -> Unit,
+    onCopyAddress: () -> Unit
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.fillMaxWidth()
@@ -83,26 +71,59 @@ fun CoinCard(title: String, address: String, balance: String, onRefresh: () -> U
                 Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                 OutlinedButton(onClick = onRefresh) { Text("Refresh") }
             }
-            Text("Address: ${address.ifEmpty { "--" }}")
+            Text("Address", style = MaterialTheme.typography.labelMedium)
+            Text(
+                text = address.ifEmpty { "--" },
+                modifier = Modifier.clickable { onCopyAddress() }
+            )
             Text("Balance: $balance")
         }
     }
 }
 
 @Composable
-fun TokenSection(tokens: List<ERC20Token>, balances: Map<String, BalanceDisplay>) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text("Tokens", style = MaterialTheme.typography.titleMedium)
-        tokens.forEach { token ->
-            val balance = balances[token.symbol]?.formatted ?: "--"
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(token.symbol, fontWeight = FontWeight.SemiBold)
-                    Text(token.name)
-                    Text("Balance: $balance")
+fun TokenSection(
+    tokens: List<ERC20Token>,
+    balances: Map<String, BalanceDisplay>,
+    onRefresh: () -> Unit
+) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row {
+                Text("Tokens", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                OutlinedButton(onClick = onRefresh) { Text("Refresh") }
+            }
+            tokens.forEach { token ->
+                val balance = balances[token.symbol]?.formatted ?: "--"
+                val symbol = token.symbol
+                val highlight = symbol.equals("USDC", ignoreCase = true) ||
+                    symbol.equals("USDT", ignoreCase = true)
+                val content: @Composable () -> Unit = {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text(token.symbol, fontWeight = FontWeight.SemiBold)
+                        Text(token.name)
+                        Text("Balance: $balance")
+                    }
+                }
+                if (highlight) {
+                    val highlightColor = if (symbol.equals("USDC", ignoreCase = true)) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                    } else {
+                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f)
+                    }
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = highlightColor),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        content()
+                    }
+                } else {
+                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                        content()
+                    }
                 }
             }
         }

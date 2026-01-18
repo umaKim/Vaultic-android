@@ -1,9 +1,7 @@
-package com.vaultic.ui
+package com.vaultic.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
@@ -13,6 +11,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import com.vaultic.ui.VaulticViewModel
+import com.vaultic.ui.components.CoinCard
+import com.vaultic.ui.components.TokenSection
+import com.vaultic.ui.components.WalletSelectorRow
 
 @Composable
 fun HomeScreen(viewModel: VaulticViewModel) {
@@ -33,24 +35,12 @@ fun HomeScreen(viewModel: VaulticViewModel) {
             )
         }
         item {
-            AddressBlock(
-                label = "ETH Address",
-                address = state.ethAddress,
-                onCopy = { clipboard.setText(AnnotatedString(state.ethAddress)) }
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            AddressBlock(
-                label = "BTC Address",
-                address = state.btcAddress,
-                onCopy = { clipboard.setText(AnnotatedString(state.btcAddress)) }
-            )
-        }
-        item {
             CoinCard(
                 title = "Bitcoin",
                 address = state.btcAddress,
                 balance = state.btcBalance?.formatted ?: "--",
-                onRefresh = { viewModel.refreshBalances() }
+                onRefresh = { viewModel.refreshBalances() },
+                onCopyAddress = { clipboard.setText(AnnotatedString(state.btcAddress)) }
             )
         }
         item {
@@ -58,14 +48,24 @@ fun HomeScreen(viewModel: VaulticViewModel) {
                 title = "Ethereum",
                 address = state.ethAddress,
                 balance = state.ethBalance?.formatted ?: "--",
-                onRefresh = { viewModel.refreshBalances() }
+                onRefresh = { viewModel.refreshBalances() },
+                onCopyAddress = { clipboard.setText(AnnotatedString(state.ethAddress)) }
             )
         }
         item {
             TokenSection(
                 tokens = viewModel.tokens(),
-                balances = state.tokenBalances
+                balances = state.tokenBalances,
+                onRefresh = { viewModel.refreshBalances() }
             )
+        }
+        if (state.error != null) {
+            item {
+                androidx.compose.material3.Text(
+                    state.error ?: "",
+                    color = androidx.compose.material3.MaterialTheme.colorScheme.error
+                )
+            }
         }
     }
 }

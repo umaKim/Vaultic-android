@@ -1,4 +1,4 @@
-package com.vaultic.ui
+package com.vaultic.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +11,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.vaultic.ui.VaulticViewModel
+import com.vaultic.ui.components.ActivityList
 
 @Composable
 fun ActivityScreen(viewModel: VaulticViewModel) {
